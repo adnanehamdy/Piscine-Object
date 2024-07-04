@@ -1,28 +1,35 @@
 #include <iostream>
-#include <vector>
+#include<map>
+#include<utility>
+#include <stdexcept>
 
 struct Account
 {
-	static int next_id;
 	private :
-		int id;
-		int value;
+	static size_t next_id;
+		size_t id;
+		float value;
 
-	public :
-	Account() :
+	Account(float value) :
 		id(++next_id),
-		value(0)
+		value(value)
 	{
 	
 	}
 
 	friend struct Bank;
 
-	void setValue(int value)
+	size_t getValue() const
 	{
-		this.value += value;
+		return this->value;
+	}
+	
+	int getId() const 
+	{
+		return this->id;
 	}
 
+	friend struct Bank;
 	friend std::ostream& operator << (std::ostream& p_os, const Account& p_account)
 	{
 		p_os << "[" << p_account.id << "] - [" << p_account.value << "]";
@@ -30,25 +37,88 @@ struct Account
 	}
 };
 
-int Account::next_id = 0;
+size_t Account::next_id = 0;
 
 struct Bank
 {
-	int liquidity;
-	std::unordered_map<int , Account *> clientAccounts;
+	private :
+		float liquidity;
+		std::map<size_t, Account *> clientAccounts;
 
+	public : 
 	Bank() :
 		liquidity(0)
 	{
 
 	}
 
+	void setLiquidity(float liquidity)
+	{
+		if (liquidity < 0)
+			throw std::runtime_error("BANK ONLY TAKE LIQUIDITY , NOT THE OTHER WAY AROUND ");
+		this->liquidity += liquidity;
+	}
+
+	size_t addAccount(int value)
+	{
+		Account * newAcc = new Account(value);
+		this->clientAccounts.insert(std::make_pair(newAcc->getId(), newAcc));
+		return (newAcc->getId());
+	}
+
+	void inflowToId(float value, size_t accId)
+	{
+		std::map<size_t, Account *>::iterator it = clientAccounts.find(accId);
+		if(it == clientAccounts.end())
+				throw std::runtime_error("ERROR ACCOUNT ID DOESN'T EXIST !!");
+
+		if (value > 0)
+		{
+			float bankFee = (5 * value) / 100;
+			liquidity += bankFee;			
+			it->second->value += value - bankFee;
+		}
+		else
+			it->second->value += value; 
+	}
+
+	void giveLoan(float loan, size_t accId)
+	{
+		if (loan > liquidity)
+			throw std::runtime_error("LOAN AMOUNT EXCEED THE BANK LIQUIDITY LIMIT , GHAYARHA");
+		std::map<size_t, Account *>::iterator it = clientAccounts.find(accId);
+		if(it == clientAccounts.end())
+			throw std::runtime_error("ERROR ACCOUNT ID DOESN'T EXIST !!");
+		it->second->value += loan;
+		this->liquidity -= loan;
+	}
+
+	void deleteAccount(size_t accId)
+	{
+		if (clientAccounts.erase(accId))
+		{
+			std::cout << "ACCOUNT WITH ID " << accId << "HAS BEEN DELETED :)" << std::endl;;
+			return;
+		}
+		throw std::runtime_error("ERROR ACCOUNT ID DOESN'T EXIST !!");
+		
+	}
+
+	Account &operator[](size_t accId)
+	{
+		std::map<size_t, Account *>::iterator it = clientAccounts.find(accId);
+		if(it == clientAccounts.end())
+			throw std::runtime_error("ERROR ACCOUNT ID DOESN'T EXIST !!");
+		return *(it->second);
+	}
+
 	friend std::ostream& operator << (std::ostream& p_os, const Bank& p_bank)
 	{
 		p_os << "Bank informations : " << std::endl;
 		p_os << "Liquidity : " << p_bank.liquidity << std::endl;
-		for (std::unordered_map<int, Account *>::const_iterator it = p_bank.clientAccounts.begin() ; it != p_bank.clientAccounts.end(); ++it)
-        	p_os << **it << std::endl;
+		p_os << "ACCOUNTS : " << std::endl;
+		for (std::map<size_t, Account *>::const_iterator	 it = p_bank.clientAccounts.begin(); it != p_bank.clientAccounts.end(); ++it)
+        	p_os << *(it->second) << std::endl;
 		return (p_os);
 	}
 };
@@ -56,30 +126,23 @@ struct Bank
 
 int main()
 {
-	Account accountA = Account();
-	accountA.id = 0;
-	accountA.value = 100;
+	try
+	{
+		Bank bank = Bank();
+		bank.setLiquidity(999);
+		bank.addAccount(500);
+		bank.addAccount(100);
+		bank.deleteAccount(2);
+		std::cout << bank[1] << std::endl;
+		bank.giveLoan(900, 1);
+		bank.setLiquidity(0);
+		bank.inflowToId(0, 1);
 
-	Account accountB = Account();
-	accountB.id = 1;
-	accountB.value = 100;
-
-	Bank bank = Bank();
-	bank.liquidity = 999;
-	bank.clientAccounts.push_back(&accountA);
-	bank.clientAccounts.push_back(&accountB);
-
-	bank.liquidity -= 200;
-	accountA.value += 400;
-
-	std::cout << "Account : " << std::endl;
-	std::cout << accountA << std::endl;
-	std::cout << accountB << std::endl;
-
-	std::cout << " ----- " << std::endl;
-
-	std::cout << "Bank : " << std::endl;
-	std::cout << bank << std::endl;
-
+		std::cout << bank << std::endl;		
+		}
+		catch(const std::exception &ex)
+		{
+			std::cerr << ex.what() << std::endl;
+		}
 	return (0);
 }
