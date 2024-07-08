@@ -1,7 +1,7 @@
 #include "vector2.hpp"
 
 
-Vector2::Vector2(float x, float y) : x(x), y(y)
+Vector2::Vector2(float y, float x) : x(x), y(y)
 {}
 
 float Vector2::get_x()

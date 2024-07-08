@@ -1,9 +1,10 @@
-#include "vector2.hpp"
 #include<map>
+#include "graph.cpp"
 
 int main()
 {
-    // Vector2 vec(1.1, 2.2);
-
-    // std::cout << vec.get_x() << "  " << vec.get_y() << std::endl;
+    Graph cartesianSystem(5);
+    cartesianSystem.addPoint(1.0,2.5);
+    cartesianSystem.addPoint(3,3);
+    cartesianSystem.printGraph();
 }
