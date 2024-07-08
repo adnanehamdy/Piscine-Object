@@ -1,0 +1,9 @@
+Account : 
+[1] - [500]
+[2] - [100]
+ ----- 
+Bank : 
+Bank informations : 
+Liquidity : 799
+[1] - [500]
+[2] - [100]

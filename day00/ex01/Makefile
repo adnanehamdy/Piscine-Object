@@ -2,9 +2,9 @@ CC = c++
 
 FLAGS = -Wall -Wextra -Werror -std=c++98
 
-SRCS = DivideAndRule.cpp
+SRCS = main.cpp vector2.cpp
 
-NAME = Divide
+NAME = cartesianGraph
 
 all : $(NAME)
 
@@ -16,4 +16,5 @@ clean :
 
 fclean : clean
 
-re : fclean all
+re : fclean allCC = c++
+
